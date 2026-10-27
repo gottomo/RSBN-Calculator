@@ -130,6 +130,10 @@ class PDF(FPDF):
 
 
 # Read & process RSBN Dataset (cis or rsbn)
+root = tk.Tk()
+root.withdraw()
+
+file_path = filedialog.askopenfilename(title='Select an RSBN Database (rsbn_<era>.dat)')
 try:
     # rsbn_era = input("Press 1 to select USSR. Press 2 to select CIS")
     # print(rsbn_era)
@@ -137,7 +141,8 @@ try:
     #     rsbn_dat = open("rsbn_ussr.dat")
     # else:
     #     rsbn_dat = open("rsbn_cis.dat")
-    rsbn_dat = open("rsbn_ussr.dat")
+    # rsbn_dat = open("rsbn_ussr.dat")
+    rsbn_dat = open(file_path)
     [rsbn_channel,rsbn_name,rsbn_ident,rsbn_freq,rsbn_lat,rsbn_long,rsbn_elev_m] = [[], [], [], [], [], [], []]
     for line in rsbn_dat:
         for i, data in enumerate([rsbn_channel,rsbn_name,rsbn_ident,rsbn_freq,rsbn_lat,rsbn_long,rsbn_elev_m]):
@@ -147,11 +152,9 @@ try:
     rsbn_long = [float(long) for long in rsbn_long]
 except:
     sys.exit("Failed to read RSBN database. Exiting...")
-# Read & process Waypoints
-root = tk.Tk()
-root.withdraw()
 
-file_path = filedialog.askopenfilename(title='Select a Flight Plan File')
+# Read & process Waypoints
+file_path = filedialog.askopenfilename(title='Select a Flight Plan File (FS2004 .pln or X-plane .fms)')
 file_extension = file_path.split(".")[-1]
 try:
     if file_extension=="pln":
