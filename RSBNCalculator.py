@@ -7,7 +7,6 @@ import tkinter as tk
 from tkinter import filedialog
 from fpdf import FPDF
 import sys
-import pathlib
 import os
 
 # Formulas from wikipedia & https://edwilliams.org/avform147.htm#Math
@@ -211,10 +210,10 @@ except:
 # Acommodate the use of pyinstaller for reading World Magnetic Model (WMM) Coefficients file
 try:
     # Path used when ran as executable compiled by pyinstaller
-    cof_file = os.path.join(sys._MEIPASS, "/wmm/WMM_2025.COF")
-except:
+    cof_file = sys._MEIPASS + "/wmm/WMM_2025.COF"
+except Exception:
     # Path used when running as python script
-    cof_file = os.path.join(os.path.abspath(__file__), "/wmm/WMM_2025.COF")
+    cof_file = os.path.abspath(".") + "/wmm/WMM_2025.COF"
 wmm = WMMv2(coeff_file=cof_file)
 [true_heading, mag_dec, mag_heading, distance] = [[], [], [], []]
 [rsbn_chosen_id, rsbn_mode, rsbn_azimuth, rsbn_orbit, rsbn_zpu, target_angle, target_distance] = [[], [], [], [], [], [], []]
@@ -305,46 +304,50 @@ except:
     sys.exit("An error occured while calculating RSBN parameters. Exiting...")
 
 # Write outputs to terminal & file
-print("-------------------------------------------------------------------------")
-print("WAYPOINT     IMT     DIS      RSBN ID               AZIMUTH     ZPU")
-print("LAT          ITT     RDIS     CHANNEL               ORBIT       TARGET ANGLE")
-print("LON                           MODE                              TARGET DISTANCE")
-print("-------------------------------------------------------------------------")
+print("---------------------------------------------------------------\n")
+print("WAYPOINT  IMT  DIS  RSBN STATION       AZIMUTH  ZPU\n")
+print("LAT       ITT RDIS  CHANNEL-IDENT      ORBIT    TGT.ANGLE\n")
+print("LON                 MODE                        TGT.DIS\n")
+print("---------------------------------------------------------------\n")
 
 for waypoint_id in waypoint_no:
+    n_or_s = ("N" if waypoint_lat[waypoint_id]>0 else "S")
+    e_or_w = ("E" if waypoint_long[waypoint_id]>0 else "W")
     if waypoint_id<len(waypoint_no)-1 and rsbn_chosen_id[waypoint_id] >= 0:
-        print(f"\n{waypoint_name[waypoint_id]:<8}     {mag_heading[waypoint_id]:>3.0f}      {distance[waypoint_id]:>3.0f}     {rsbn_name[rsbn_chosen_id[waypoint_id]]:<22}{rsbn_azimuth[waypoint_id]:>3.0f}         {rsbn_zpu[waypoint_id]:>3.0f}".replace('nan', ''))
-        print(f"{waypoint_lat[waypoint_id]:.4f}      {true_heading[waypoint_id]:>3.0f}      {remaining_distance[waypoint_id]:>3.0f}     CH {rsbn_channel[rsbn_chosen_id[waypoint_id]]} - {rsbn_ident[rsbn_chosen_id[waypoint_id]]:<14}{rsbn_orbit[waypoint_id]:>3.0f}         {target_angle[waypoint_id]:>3.0f}".replace('nan', ''))
-        print(f"{waypoint_long[waypoint_id]:.4f}                       {rsbn_mode[waypoint_id]:<22}            {target_distance[waypoint_id]:>3.0f}".replace('nan', ''))
+        print(f"\n{waypoint_name[waypoint_id]:<8}  {mag_heading[waypoint_id]:>3.0f} {distance[waypoint_id]:>4.0f}  {rsbn_name[rsbn_chosen_id[waypoint_id]]:<19}{rsbn_azimuth[waypoint_id]:>3.0f}      {rsbn_zpu[waypoint_id]:>3.0f}\n".replace('nan', ''))
+        print(f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}  {true_heading[waypoint_id]:>3.0f} {remaining_distance[waypoint_id]:>4.0f}  CH {rsbn_channel[rsbn_chosen_id[waypoint_id]]} - {rsbn_ident[rsbn_chosen_id[waypoint_id]]:<11}{rsbn_orbit[waypoint_id]:>3.0f}      {target_angle[waypoint_id]:>3.0f}\n".replace('nan', ''))
+        print(f"{e_or_w}{waypoint_long[waypoint_id]:.4f}            {rsbn_mode[waypoint_id]:<22}      {target_distance[waypoint_id]:>3.0f}\n".replace('nan', ''))
     elif waypoint_id<len(waypoint_no)-1 and rsbn_chosen_id[waypoint_id] == -1:
-        print(f"\n{waypoint_name[waypoint_id]:<8}     {mag_heading[waypoint_id]:>3.0f}")
-        print(f"{waypoint_lat[waypoint_id]:.4f}      {true_heading[waypoint_id]:>3.0f}")
-        print(f"{waypoint_long[waypoint_id]:.4f}      {distance[waypoint_id]:<8.0f}")
+        print(f"\n{waypoint_name[waypoint_id]:<8}  {mag_heading[waypoint_id]:>3.0f} {distance[waypoint_id]:>4.0f}\n")
+        print(f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}  {true_heading[waypoint_id]:>3.0f} {remaining_distance[waypoint_id]:>4.0f}\n")
+        print(f"{e_or_w}{waypoint_long[waypoint_id]:.4f}  {distance[waypoint_id]:<8.0f}\n")
     else:
-        print(f"\n{waypoint_name[waypoint_id]:<8}")
-        print(f"{waypoint_lat[waypoint_id]:.4f}")
-        print(f"{waypoint_long[waypoint_id]:.4f}")
+        print(f"\n{waypoint_name[waypoint_id]:<8}\n")
+        print(f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}\n")
+        print(f"{e_or_w}{waypoint_long[waypoint_id]:.4f}\n")
 
-file = open("RSBN_calculation_" + waypoint_name[0] + "_" + waypoint_name[-1] + ".txt", "w")
-file.write("-------------------------------------------------------------------------\n")
-file.write("WAYPOINT     IMT     RSBN ID               AZIMUTH     ZPU\n")
-file.write("LAT          ITT     CHANNEL               ORBIT       TARGET ANGLE\n")
-file.write("LON          DIS     MODE                              TARGET DISTANCE\n")
-file.write("-------------------------------------------------------------------------\n")
+file = open("RSBN_result_" + waypoint_name[0] + "_" + waypoint_name[-1] + ".txt", "w")
+file.write("---------------------------------------------------------------\n")
+file.write("WAYPOINT  IMT  DIS  RSBN STATION       AZIMUTH  ZPU\n")
+file.write("LAT       ITT RDIS  CHANNEL-IDENT      ORBIT    TGT.ANGLE\n")
+file.write("LON                 MODE                        TGT.DIS\n")
+file.write("---------------------------------------------------------------\n")
 
 for waypoint_id in waypoint_no:
+    n_or_s = ("N" if waypoint_lat[waypoint_id]>0 else "S")
+    e_or_w = ("E" if waypoint_long[waypoint_id]>0 else "W")
     if waypoint_id<len(waypoint_no)-1 and rsbn_chosen_id[waypoint_id] >= 0:
-        file.write(f"\n{waypoint_name[waypoint_id]:<8}     {mag_heading[waypoint_id]:>3.0f}     {rsbn_name[rsbn_chosen_id[waypoint_id]]:<22}{rsbn_azimuth[waypoint_id]:>3.0f}         {rsbn_zpu[waypoint_id]:>3.0f}\n".replace('nan', ''))
-        file.write(f"{waypoint_lat[waypoint_id]:.4f}      {true_heading[waypoint_id]:>3.0f}     CH {rsbn_channel[rsbn_chosen_id[waypoint_id]]} - {rsbn_ident[rsbn_chosen_id[waypoint_id]]:<14}{rsbn_orbit[waypoint_id]:>3.0f}         {target_angle[waypoint_id]:>3.0f}\n".replace('nan', ''))
-        file.write(f"{waypoint_long[waypoint_id]:.4f}      {distance[waypoint_id]:>3.0f}     {rsbn_mode[waypoint_id]:<22}            {target_distance[waypoint_id]:>3.0f}\n".replace('nan', ''))
+        file.write(f"\n{waypoint_name[waypoint_id]:<8}  {mag_heading[waypoint_id]:>3.0f} {distance[waypoint_id]:>4.0f}  {rsbn_name[rsbn_chosen_id[waypoint_id]]:<19}{rsbn_azimuth[waypoint_id]:>3.0f}      {rsbn_zpu[waypoint_id]:>3.0f}\n".replace('nan', ''))
+        file.write(f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}  {true_heading[waypoint_id]:>3.0f} {remaining_distance[waypoint_id]:>4.0f}  CH {rsbn_channel[rsbn_chosen_id[waypoint_id]]} - {rsbn_ident[rsbn_chosen_id[waypoint_id]]:<11}{rsbn_orbit[waypoint_id]:>3.0f}      {target_angle[waypoint_id]:>3.0f}\n".replace('nan', ''))
+        file.write(f"{e_or_w}{waypoint_long[waypoint_id]:.4f}            {rsbn_mode[waypoint_id]:<22}      {target_distance[waypoint_id]:>3.0f}\n".replace('nan', ''))
     elif waypoint_id<len(waypoint_no)-1 and rsbn_chosen_id[waypoint_id] == -1:
-        file.write(f"\n{waypoint_name[waypoint_id]:<8}     {mag_heading[waypoint_id]:>3.0f}\n")
-        file.write(f"{waypoint_lat[waypoint_id]:.4f}      {true_heading[waypoint_id]:>3.0f}\n")
-        file.write(f"{waypoint_long[waypoint_id]:.4f}      {distance[waypoint_id]:<8.0f}\n")
+        file.write(f"\n{waypoint_name[waypoint_id]:<8}  {mag_heading[waypoint_id]:>3.0f} {distance[waypoint_id]:>4.0f}\n")
+        file.write(f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}  {true_heading[waypoint_id]:>3.0f} {remaining_distance[waypoint_id]:>4.0f}\n")
+        file.write(f"{e_or_w}{waypoint_long[waypoint_id]:.4f}  {distance[waypoint_id]:<8.0f}\n")
     else:
         file.write(f"\n{waypoint_name[waypoint_id]:<8}\n")
-        file.write(f"{waypoint_lat[waypoint_id]:.4f}\n")
-        file.write(f"{waypoint_long[waypoint_id]:.4f}\n")
+        file.write(f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}\n")
+        file.write(f"{e_or_w}{waypoint_long[waypoint_id]:.4f}\n")
 
 file.close()
 
