@@ -1,0 +1,1 @@
+pyinstaller --add-data="wmm/WMM_2025.COF;wmm" -F RSBNCalculator.py

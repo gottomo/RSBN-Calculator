@@ -1,11 +1,14 @@
 import numpy as np
 from math import nan
-from pygeomag import GeoMag
-from pygeomag.wmm.wmm_2025 import WMM_2025
+# from pygeomag import GeoMag
+# from pygeomag.wmm.wmm_2025 import WMM_2025
+from pywmm import WMMv2
 import tkinter as tk
 from tkinter import filedialog
 from fpdf import FPDF
 import sys
+import pathlib
+import os
 
 # Formulas from wikipedia & https://edwilliams.org/avform147.htm#Math
 # Useful wikipedia articles: https://en.wikipedia.org/wiki/Great-circle_navigation, https://en.wikipedia.org/wiki/Spherical_trigonometry#Napier's_rules_for_quadrantal_triangles
@@ -159,7 +162,7 @@ file_extension = file_path.split(".")[-1]
 try:
     if file_extension=="pln":
         # For loading FS2004 .pln files
-        print("FS2004 .pln flight plan file loading")
+        print("Loading FS2004 .pln flight plan file")
         flight_plan = open(file_path)
         [waypoint_no, waypoint_name, waypoint_lat, waypoint_long] = [[], [], [], []]
         for line in flight_plan:
@@ -177,7 +180,7 @@ try:
         flight_plan.close()
     elif file_extension=="fms":
         # X-Plane .fms file format, for detail refer to https://developer.x-plane.com/article/flightplan-files-v11-fms-file-format/
-        print("X-plane .fms flight plan file loading")
+        print("Loading X-plane .fms flight plan file")
         [waypoint_no, waypoint_name, waypoint_lat, waypoint_long] = [[], [], [], []]
         wp_no = 0
         flight_plan = open(file_path)
@@ -203,13 +206,23 @@ except:
 #       else if RSBN coincides with waypoint 2, then "to" mode
 #       else PRC mode
 #       Find Azimuth, Distance, and ZPU
-geo_mag = GeoMag(coefficients_file="wmm/WMM_2025.COF")
+# geo_mag = GeoMag(coefficients_file="wmm/WMM_2025.COF")
+
+# Acommodate the use of pyinstaller for reading World Magnetic Model (WMM) Coefficients file
+try:
+    # Path used when ran as executable compiled by pyinstaller
+    cof_file = os.path.join(sys._MEIPASS, "/wmm/WMM_2025.COF")
+except:
+    # Path used when running as python script
+    cof_file = os.path.join(os.path.abspath(__file__), "/wmm/WMM_2025.COF")
+wmm = WMMv2(coeff_file=cof_file)
 [true_heading, mag_dec, mag_heading, distance] = [[], [], [], []]
 [rsbn_chosen_id, rsbn_mode, rsbn_azimuth, rsbn_orbit, rsbn_zpu, target_angle, target_distance] = [[], [], [], [], [], [], []]
 try:
     for waypoint_id in waypoint_no:
         # Calculate Magnetic Declination
-        md = geo_mag.calculate(glat=waypoint_lat[waypoint_id], glon=waypoint_long[waypoint_id], alt=0, time=2025.0).d
+        # md = geo_mag.calculate(glat=waypoint_lat[waypoint_id], glon=waypoint_long[waypoint_id], alt=0, time=2025.0).d
+        md = wmm.get_declination(waypoint_lat[waypoint_id], waypoint_long[waypoint_id], 2025.0, 0)
         mag_dec.append(md)
         if waypoint_id<len(waypoint_no)-1: # calculate RSBN parameters for all waypoints excluding the last one
             # Calculate the True Heading and Distance between the waypoints
