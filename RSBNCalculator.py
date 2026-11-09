@@ -102,10 +102,8 @@ def calc_zpu(lat_rsbn, long_rsbn, lat1, long1, lat2, long2):
     rsbn_projection = nvector_to_latlong(rsbn_projection)
     # To find azimuth at RSBN, calculate azimuth from RSBN to the perpendicular point on the p1-p2 course, then add or subtract 90deg
     azimuth_rsbn_perpendicular = calc_azimuth(lat_rsbn, long_rsbn, rsbn_projection[0], rsbn_projection[1])
-    if azimuth1 < azimuth_rsbn_perpendicular:
-        azimuth_rsbn = azimuth_rsbn_perpendicular - np.pi/2
-    else:
-        azimuth_rsbn = azimuth_rsbn_perpendicular + np.pi/2
+    azimuth_diff = np.mod(azimuth1-azimuth_rsbn_perpendicular, 2*np.pi)
+    azimuth_rsbn = np.mod(azimuth_rsbn_perpendicular + azimuth_diff, 2*np.pi)
     return np.degrees(azimuth_rsbn)
 
 class PDF(FPDF):
@@ -243,7 +241,7 @@ try:
             rsbn_closest_to_wp2_id = np.argmin(rsbn_dist_to_wp2)
             rsbn_closest_to_wp2_dist = min(rsbn_dist_to_wp2)
             # Calculate RSBN parameters: Mode, Azimuth, Orbit, ZPU
-            if rsbn_closest_to_wp1_dist < 2:
+            if rsbn_closest_to_wp1_dist < 2 and rsbn_closest_to_wp2_dist < 300:
                 # If RSBN station conincides with wp1, use FROM (OT) mode
                 rsbn_chosen_id.append(rsbn_closest_to_wp1_id)
                 rsbn_mode.append("FROM (OT)")
@@ -252,7 +250,7 @@ try:
                 rsbn_zpu.append(nan)
                 target_angle.append(nan)
                 target_distance.append(nan)
-            elif rsbn_closest_to_wp2_dist < 2:
+            elif rsbn_closest_to_wp2_dist < 2 and rsbn_closest_to_wp1_dist < 300:
                 # If RSBN station conincides with wp2, use TO (HA) mode
                 rsbn_chosen_id.append(rsbn_closest_to_wp2_id)
                 rsbn_mode.append("TO (HA)")
