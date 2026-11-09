@@ -12,8 +12,8 @@ Even though a GUI-based RSBN calculator already exists (https://www.avsimrus.com
 - Output RSBN parameters on command line, txt file, and pdf file
 
 ## Installation:
-Download and place the [RSBNCalculator.exe]() in a convenient location.  
-Alternatively, place the RSBNCalculator.py in a convenient location.
+Download and place the [RSBNCalculator.exe](https://github.com/gottomo/RSBN-Calculator/releases/latest/download/RSBNCalculator.exe) in a convenient location.  
+(Alternatively, with Python 3.11.3+ and required python modules installed, download and place the RSBNCalculator.py in a convenient location.)
 
 ## Requires:
 - RSBN Database from the simulator (eg. /Tu-134A-3/rsbn_ussr.dat)
