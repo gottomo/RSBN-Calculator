@@ -10,8 +10,7 @@ import sys
 import os
 
 # Formulas from wikipedia & https://edwilliams.org/avform147.htm#Math
-# Useful wikipedia articles: https://en.wikipedia.org/wiki/Great-circle_navigation, https://en.wikipedia.org/wiki/Spherical_trigonometry#Napier's_rules_for_quadrantal_triangles
-# Also see RSBN Calculator note in tablet
+# Useful wikipedia article: https://en.wikipedia.org/wiki/Great-circle_navigation
 
 def dm_to_dd(d, m):
     # dm_to_dd(degree, minutes)
@@ -106,12 +105,12 @@ def calc_zpu(lat_rsbn, long_rsbn, lat1, long1, lat2, long2):
     azimuth_rsbn = np.mod(azimuth_rsbn_perpendicular + azimuth_diff, 2*np.pi)
     return np.degrees(azimuth_rsbn)
 
+# Prepare Header and Footer for PDF file output
 class PDF(FPDF):
     def header(self):
         # Create page border for every pages
         self.rect(5, 5, 200, 287, 'D')
         self.set_font("Courier", size=14)
-        print("page_no",self.page_no)
         if self.page_no()==1:
             self.cell(0, 5, text="FLIGHT LOG & RSBN SETTINGS", ln=1, align="C")
             self.cell(0, 5, text="--------------------------", ln=1, align="C")
@@ -203,16 +202,16 @@ except:
 #       else if RSBN coincides with waypoint 2, then "to" mode
 #       else PRC mode
 #       Find Azimuth, Distance, and ZPU
-# geo_mag = GeoMag(coefficients_file="wmm/WMM_2025.COF")
 
 # Acommodate the use of pyinstaller for reading World Magnetic Model (WMM) Coefficients file
 try:
     # Path used when ran as executable compiled by pyinstaller
     cof_file = sys._MEIPASS + "/wmm/WMM_2025.COF"
+    wmm = WMMv2(coeff_file=cof_file)
 except Exception:
-    # Path used when running as python script
-    cof_file = os.path.abspath(".") + "/wmm/WMM_2025.COF"
-wmm = WMMv2(coeff_file=cof_file)
+    # If using the Python script, use the default 2025 WMM provided by the pywmm module
+    wmm = WMMv2()
+
 [true_heading, mag_dec, mag_heading, distance] = [[], [], [], []]
 [rsbn_chosen_id, rsbn_mode, rsbn_azimuth, rsbn_orbit, rsbn_zpu, target_angle, target_distance] = [[], [], [], [], [], [], []]
 try:
@@ -351,15 +350,7 @@ file.close()
 
 pdf = PDF("P", "mm", "A4")
 pdf.add_page()
-# pdf.rect(5, 5, 200, 287, 'D')
 pdf.set_font("Courier", size=14)
-# pdf.cell(0, 5, txt="FLIGHT LOG & RSBN SETTINGS", ln=1, align="C")
-# pdf.cell(0, 5, txt="--------------------------", ln=1, align="C")
-# pdf.write(6, txt="---------------------------------------------------------------\n")
-# pdf.write(6, txt="WAYPOINT  IMT  RSBN STATION       AZIMUTH  ZPU\n")
-# pdf.write(6, txt="LAT       ITT  CHANNEL-IDENT      ORBIT    TGT.ANGLE\n")
-# pdf.write(6, txt="LON       DIS  MODE                        TGT.DIS\n")
-# pdf.write(6, txt="---------------------------------------------------------------\n")
 for waypoint_id in waypoint_no:
     n_or_s = ("N" if waypoint_lat[waypoint_id]>0 else "S")
     e_or_w = ("E" if waypoint_long[waypoint_id]>0 else "W")
@@ -367,10 +358,6 @@ for waypoint_id in waypoint_no:
         if pdf.will_page_break(height=18):
             # Avoid introducing automatic page break mid waypoint
             pdf.add_page()
-        # txt_line1 = f"\n{waypoint_name[waypoint_id]:<8}  {mag_heading[waypoint_id]:>3.0f}  {rsbn_name[rsbn_chosen_id[waypoint_id]]:<19}{rsbn_azimuth[waypoint_id]:>3.0f}      {rsbn_zpu[waypoint_id]:>3.0f}\n".replace('nan', '')
-        # txt_line2 = f"{waypoint_lat[waypoint_id]:.4f}   {true_heading[waypoint_id]:>3.0f}  CH {rsbn_channel[rsbn_chosen_id[waypoint_id]]} - {rsbn_ident[rsbn_chosen_id[waypoint_id]]:<11}{rsbn_orbit[waypoint_id]:>3.0f}      {target_angle[waypoint_id]:>3.0f}\n".replace('nan', '')
-        # txt_line3 = f"{waypoint_long[waypoint_id]:.4f}   {distance[waypoint_id]:>3.0f}  {rsbn_mode[waypoint_id]:<22}      {target_distance[waypoint_id]:>3.0f}\n".replace('nan', '')
-        # pdf.multi_cell(0, 6, text=txt_line1+txt_line2+txt_line3, align="L")
         pdf.write(6, text=f"\n{waypoint_name[waypoint_id]:<8}  {mag_heading[waypoint_id]:>3.0f} {distance[waypoint_id]:>4.0f}  {rsbn_name[rsbn_chosen_id[waypoint_id]]:<19}{rsbn_azimuth[waypoint_id]:>3.0f}      {rsbn_zpu[waypoint_id]:>3.0f}\n".replace('nan', ''))
         pdf.write(6, text=f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}  {true_heading[waypoint_id]:>3.0f} {remaining_distance[waypoint_id]:>4.0f}  CH {rsbn_channel[rsbn_chosen_id[waypoint_id]]} - {rsbn_ident[rsbn_chosen_id[waypoint_id]]:<11}{rsbn_orbit[waypoint_id]:>3.0f}      {target_angle[waypoint_id]:>3.0f}\n".replace('nan', ''))
         pdf.write(6, text=f"{e_or_w}{waypoint_long[waypoint_id]:.4f}            {rsbn_mode[waypoint_id]:<22}      {target_distance[waypoint_id]:>3.0f}\n".replace('nan', ''))
@@ -383,21 +370,5 @@ for waypoint_id in waypoint_no:
         pdf.write(6, text=f"{n_or_s}{waypoint_lat[waypoint_id]:.4f}\n")
         pdf.write(6, text=f"{e_or_w}{waypoint_long[waypoint_id]:.4f}\n")
 
-# if pdf.will_page_break(height=12):                       
-#     pdf.add_page()                                       
-# pdf.write(6, text="IMT...Intended Magnetic Track, ITT...Intended True Track\n")
-# pdf.write(6, text="DIS...Distance (km), RDIS...Remaining Distance (km)\n")
-
 pdf.output("RSBN_result_" + waypoint_name[0] + "_" + waypoint_name[-1] + ".pdf")
-# p1 = [dm_to_dd(44, 57.73), dm_to_dd(39, 34.58)]
-# p2 = [dm_to_dd(46, 35.12), dm_to_dd(40, 39.57)]
-# rsbn = [45.0333, 39.1750]
-
-# print("Initial True course: ", calc_true_heading(p1[0], p1[1], p2[0], p2[1]))
-# print("Azimuth: ", calc_true_heading(rsbn[0], rsbn[1], p2[0], p2[1]))
-# print("Orbit: ", calc_great_circle_distance(rsbn[0], rsbn[1], p2[0], p2[1]))
-
-# print("ZPU: ", calc_zpu(rsbn[0], rsbn[1], p1[0], p1[1], p2[0], p2[1]))
-# print("Final True course: ", np.degrees(calc_azimuth2(p1[0], p1[1], p2[0], p2[1])))
-
 input("press Enter to exit")
