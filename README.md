@@ -1,4 +1,6 @@
 # RSBN-Calculator
+For flight simulation purposes only.
+
 A Python script to calculate RSBN parameters using RSBN dataset and waypoint file, and output result to a pdf file. A standalone executable is also available through [Releases](https://github.com/gottomo/RSBN-Calculator/releases). The executable can be compiled using the compile.bat script with pyinstaller. Useful tool for a flight planning and navigation with Tu-134.
 
 Even though a GUI-based RSBN calculator already exists (https://www.avsimrus.com/f/fs2004-utilities-45/rsbn-calculator-version-1-3-10010.html), my motivation for scirpting this was because the pre-existing program causes character encoding issues on my Windows 11 system. Furthermore I wanted a pdf file output in a format similar to the Simbrief PDF format. 
