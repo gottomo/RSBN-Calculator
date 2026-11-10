@@ -34,6 +34,11 @@ ITT - Intended True Track
 DIS - Distance to next waypoint (km)  
 RDIS - Remaining distance to the final waypoint (km)
 
+## Python Library Used:
+- numpy
+- pywmm
+- fpdf2 (usage covered by LGPLv3)
+
 ## References:
 - https://www.avsimrus.com/f/fs2004-utilities-45/rsbn-calculator-version-1-3-10010.html for sanity-checking calculation results
 - https://edwilliams.org/avform147.htm#Math, https://en.wikipedia.org/wiki/Great-circle_navigation, https://en.wikipedia.org/wiki/Spherical_trigonometry#Napier's_rules_for_quadrantal_triangles for concepts and formulas

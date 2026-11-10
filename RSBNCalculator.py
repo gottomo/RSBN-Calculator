@@ -1,13 +1,10 @@
 import numpy as np
 from math import nan
-# from pygeomag import GeoMag
-# from pygeomag.wmm.wmm_2025 import WMM_2025
 from pywmm import WMMv2
 import tkinter as tk
 from tkinter import filedialog
 from fpdf import FPDF
 import sys
-import os
 
 # Formulas from wikipedia & https://edwilliams.org/avform147.htm#Math
 # Useful wikipedia article: https://en.wikipedia.org/wiki/Great-circle_navigation
